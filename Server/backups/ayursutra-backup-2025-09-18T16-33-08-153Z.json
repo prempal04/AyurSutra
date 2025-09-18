@@ -1,0 +1,332 @@
+{
+  "users": [
+    {
+      "_id": "68cc1cee05d5813c06c1508f",
+      "firstName": "Rajesh",
+      "lastName": "Kumar",
+      "email": "rajesh.kumar@ayursutra.com",
+      "role": "doctor",
+      "phone": "9876543210",
+      "specialization": "Panchakarma",
+      "createdAt": "2025-09-18T14:53:34.238Z",
+      "__v": 0,
+      "isActive": true,
+      "isVerified": false,
+      "lastLogin": "2025-09-18T14:54:01.888Z",
+      "preferences": {
+        "language": "en",
+        "notifications": {
+          "email": true,
+          "push": true,
+          "sms": true
+        },
+        "theme": "light"
+      },
+      "profileCompletion": 40,
+      "updatedAt": "2025-09-18T14:54:01.889Z"
+    },
+    {
+      "_id": "68cc1cee05d5813c06c15090",
+      "firstName": "Priya",
+      "lastName": "Sharma",
+      "email": "priya.sharma@ayursutra.com",
+      "role": "doctor",
+      "phone": "9876543211",
+      "specialization": "General Medicine",
+      "createdAt": "2025-09-18T14:53:34.240Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c15091",
+      "firstName": "Amit",
+      "lastName": "Singh",
+      "email": "amit.singh@ayursutra.com",
+      "role": "doctor",
+      "phone": "9876543212",
+      "specialization": "Ayurvedic Dermatology",
+      "createdAt": "2025-09-18T14:53:34.240Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c15092",
+      "firstName": "Admin",
+      "lastName": "User",
+      "email": "admin@ayursutra.com",
+      "role": "admin",
+      "phone": "9876543213",
+      "createdAt": "2025-09-18T14:53:34.240Z",
+      "__v": 0,
+      "isActive": true,
+      "isVerified": false,
+      "lastLogin": "2025-09-18T15:01:10.322Z",
+      "preferences": {
+        "language": "en",
+        "notifications": {
+          "email": true,
+          "push": true,
+          "sms": true
+        },
+        "theme": "light"
+      },
+      "profileCompletion": 40,
+      "updatedAt": "2025-09-18T15:01:10.323Z"
+    }
+  ],
+  "patients": [
+    {
+      "_id": "68cc1cee05d5813c06c15094",
+      "patientId": "PAT001",
+      "personalInfo": {
+        "firstName": "Aarav",
+        "lastName": "Patel",
+        "dateOfBirth": "1990-05-15T00:00:00.000Z",
+        "gender": "Male",
+        "phone": "+91-9123456789",
+        "email": "aarav.patel@email.com"
+      },
+      "address": {
+        "street": "123 MG Road",
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "pincode": "400001"
+      },
+      "medicalInfo": {
+        "bloodType": "O+",
+        "allergies": [
+          "Peanuts"
+        ],
+        "chronicConditions": [
+          "Diabetes"
+        ],
+        "currentMedications": [
+          "Metformin"
+        ]
+      },
+      "emergencyContact": {
+        "name": "Reena Patel",
+        "relationship": "Wife",
+        "phone": "+91-9123456790"
+      },
+      "createdAt": "2025-09-18T14:53:34.250Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c15095",
+      "patientId": "PAT002",
+      "personalInfo": {
+        "firstName": "Diya",
+        "lastName": "Sharma",
+        "dateOfBirth": "1985-08-22T00:00:00.000Z",
+        "gender": "Female",
+        "phone": "+91-9123456791",
+        "email": "diya.sharma@email.com"
+      },
+      "address": {
+        "street": "456 Park Street",
+        "city": "Delhi",
+        "state": "Delhi",
+        "pincode": "110001"
+      },
+      "medicalInfo": {
+        "bloodType": "A+",
+        "allergies": [
+          "Dust"
+        ],
+        "chronicConditions": [
+          "Hypertension"
+        ],
+        "currentMedications": [
+          "Amlodipine"
+        ]
+      },
+      "emergencyContact": {
+        "name": "Raj Sharma",
+        "relationship": "Husband",
+        "phone": "+91-9123456792"
+      },
+      "createdAt": "2025-09-18T14:53:34.250Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c15096",
+      "patientId": "PAT003",
+      "personalInfo": {
+        "firstName": "Vikram",
+        "lastName": "Singh",
+        "dateOfBirth": "1995-12-10T00:00:00.000Z",
+        "gender": "Male",
+        "phone": "+91-9123456793",
+        "email": "vikram.singh@email.com"
+      },
+      "address": {
+        "street": "789 Brigade Road",
+        "city": "Bangalore",
+        "state": "Karnataka",
+        "pincode": "560001"
+      },
+      "medicalInfo": {
+        "bloodType": "B+",
+        "allergies": [],
+        "chronicConditions": [],
+        "currentMedications": []
+      },
+      "emergencyContact": {
+        "name": "Sunita Singh",
+        "relationship": "Mother",
+        "phone": "+91-9123456794"
+      },
+      "createdAt": "2025-09-18T14:53:34.250Z",
+      "__v": 0
+    }
+  ],
+  "appointments": [
+    {
+      "_id": "68cc1cee05d5813c06c1509d",
+      "appointmentId": "APT001",
+      "patientId": "PAT001",
+      "doctorId": "68cc1cee05d5813c06c1508f",
+      "treatmentType": "Abhyanga",
+      "appointmentDate": "2024-01-20T00:00:00.000Z",
+      "timeSlot": "10:00 AM",
+      "status": "scheduled",
+      "notes": "First visit for stress relief",
+      "createdAt": "2025-09-18T14:53:34.255Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c1509e",
+      "appointmentId": "APT002",
+      "patientId": "PAT002",
+      "doctorId": "68cc1cee05d5813c06c15090",
+      "treatmentType": "Shirodhara",
+      "appointmentDate": "2024-01-21T00:00:00.000Z",
+      "timeSlot": "2:00 PM",
+      "status": "completed",
+      "notes": "Follow-up treatment for anxiety",
+      "createdAt": "2025-09-18T14:53:34.256Z",
+      "__v": 0
+    }
+  ],
+  "treatments": [
+    {
+      "_id": "68cc1cee05d5813c06c15098",
+      "name": "Abhyanga",
+      "category": "Panchakarma",
+      "description": "Full body oil massage therapy for relaxation and healing",
+      "duration": "60 minutes",
+      "price": 2500,
+      "benefits": [
+        "Improves circulation",
+        "Reduces stress",
+        "Nourishes skin"
+      ],
+      "contraindications": [
+        "Fever",
+        "Acute infections"
+      ],
+      "createdAt": "2025-09-18T14:53:34.253Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c15099",
+      "name": "Shirodhara",
+      "category": "Panchakarma",
+      "description": "Continuous pouring of medicated oil on forehead",
+      "duration": "45 minutes",
+      "price": 3500,
+      "benefits": [
+        "Calms nervous system",
+        "Improves sleep",
+        "Reduces anxiety"
+      ],
+      "contraindications": [
+        "Brain tumor",
+        "Recent head injury"
+      ],
+      "createdAt": "2025-09-18T14:53:34.253Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c1509a",
+      "name": "Nasya",
+      "category": "Panchakarma",
+      "description": "Nasal administration of medicated oils",
+      "duration": "30 minutes",
+      "price": 1500,
+      "benefits": [
+        "Clears sinuses",
+        "Improves breathing",
+        "Enhances mental clarity"
+      ],
+      "contraindications": [
+        "Pregnancy",
+        "Acute fever"
+      ],
+      "createdAt": "2025-09-18T14:53:34.253Z",
+      "__v": 0
+    },
+    {
+      "_id": "68cc1cee05d5813c06c1509b",
+      "name": "Ayurvedic Consultation",
+      "category": "Consultation",
+      "description": "Comprehensive health assessment and treatment planning",
+      "duration": "60 minutes",
+      "price": 1000,
+      "benefits": [
+        "Personalized treatment",
+        "Health assessment",
+        "Lifestyle guidance"
+      ],
+      "contraindications": [],
+      "createdAt": "2025-09-18T14:53:34.254Z",
+      "__v": 0
+    }
+  ],
+  "treatmentplans": [
+    {
+      "_id": "68cc1cee05d5813c06c150a0",
+      "planId": "TP001",
+      "patientId": "PAT001",
+      "doctorId": "68cc1cee05d5813c06c1508f",
+      "treatmentId": "68cc1cee05d5813c06c15098",
+      "startDate": "2024-01-15T00:00:00.000Z",
+      "endDate": "2024-02-15T00:00:00.000Z",
+      "sessions": 10,
+      "completedSessions": 3,
+      "status": "active",
+      "notes": "Monthly Panchakarma treatment plan",
+      "createdAt": "2025-09-18T14:53:34.257Z",
+      "__v": 0
+    }
+  ],
+  "healthrecords": [
+    {
+      "_id": "68cc1cee05d5813c06c150a2",
+      "recordId": "HR001",
+      "patientId": "PAT001",
+      "doctorId": "68cc1cee05d5813c06c1508f",
+      "visitDate": "2024-01-15T00:00:00.000Z",
+      "symptoms": [
+        "Stress",
+        "Insomnia",
+        "Back pain"
+      ],
+      "diagnosis": "Vata imbalance with stress-related symptoms",
+      "treatment": "Abhyanga and Shirodhara recommended",
+      "prescription": [
+        "Ashwagandha churna",
+        "Brahmi ghrita"
+      ],
+      "notes": "Patient shows signs of chronic stress, recommend regular Panchakarma",
+      "vitals": {
+        "bloodPressure": "130/85",
+        "heartRate": 78,
+        "temperature": 98.6,
+        "weight": 70,
+        "height": 175
+      },
+      "createdAt": "2025-09-18T14:53:34.258Z",
+      "__v": 0
+    }
+  ]
+}
