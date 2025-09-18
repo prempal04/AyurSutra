@@ -1,22 +1,58 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../../contexts/AuthContext';
 
-export default function LoginForm({ role, onToggleRole, onLogin }) {
+export default function LoginForm({ role, onToggleRole }) {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Pre-fill with test credentials based on role
+  React.useEffect(() => {
+    if (role === 'admin') {
+      setEmail('admin@ayursutra.com');
+      setPassword('admin123');
+    } else if (role === 'patient') {
+      setEmail('rahul@example.com');
+      setPassword('patient123');
+    }
+  }, [role]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
+    setError('');
+
+    console.log('LoginForm: Attempting login with email:', email);
+
+    try {
+      const result = await login(email, password);
+      console.log('LoginForm: Login result:', result);
+      
+      if (result.success) {
+        // Navigate based on user role
+        const userRole = result.user.role;
+        console.log('LoginForm: Login successful, user role:', userRole);
+        if (userRole === 'admin' || userRole === 'doctor') {
+          navigate('/dashboard');
+        } else if (userRole === 'patient') {
+          navigate('/dashboard');
+        }
+      } else {
+        console.log('LoginForm: Login failed:', result.message);
+        setError(result.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('LoginForm: Login error:', error);
+      setError('Login failed. Please try again.');
+    } finally {
       setLoading(false);
-      if (onLogin) onLogin(role);
-      navigate('/dashboard');
-    }, 1000);
+    }
   };
 
   return (
@@ -27,13 +63,23 @@ export default function LoginForm({ role, onToggleRole, onLogin }) {
             <span className="text-white font-bold text-xl">P</span>
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-            Sign in to PanchkarmaPlus
+            Sign in to AyurSutra
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             {role === 'admin' ? 'Healthcare Provider Portal' : 'Patient Portal'}
           </p>
         </div>
         <div className="bg-white rounded-lg shadow-md p-8">
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-600">
+              Test Credentials: {role === 'admin' ? 'admin@ayursutra.com / admin123' : 'rahul@example.com / patient123'}
+            </p>
+          </div>
           <div className="flex space-x-2 mb-6">
             <button
               type="button"

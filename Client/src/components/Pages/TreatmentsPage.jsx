@@ -1,175 +1,225 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlusIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import PageHeader from '../Shared/PageHeader';
 import Table from '../Shared/Table';
-
-const mockTreatments = [
-  {
-    id: '1',
-    name: 'Abhyanga + Shirodhara',
-    description: 'Full body massage with warm medicated oil followed by a continuous flow of warm oil on the forehead.',
-    duration: '90 mins',
-    benefits: [
-      'Reduces stress and anxiety',
-      'Improves sleep quality',
-      'Nourishes the body and mind',
-      'Balances Vata dosha'
-    ],
-    contraindications: [
-      'Fever',
-      'Acute illness',
-      'First day of menstruation',
-      'Pregnancy (first trimester)'
-    ],
-    category: 'shamana'
-  },
-  {
-    id: '2',
-    name: 'Panchakarma Detox Program',
-    description: 'A comprehensive cleansing and rejuvenation program that includes multiple therapeutic treatments.',
-    duration: '7-21 days',
-    benefits: [
-      'Deep cleansing of body tissues',
-      'Removes accumulated toxins',
-      'Restores metabolic functions',
-      'Enhances immunity'
-    ],
-    contraindications: [
-      'Severe weakness',
-      'Acute diseases',
-      'Pregnancy',
-      'Recent surgery'
-    ],
-    category: 'shodhana'
-  },
-  {
-    id: '3',
-    name: 'Nasya Therapy',
-    description: 'Administration of medicated oils or powders through the nasal passages.',
-    duration: '45 mins',
-    benefits: [
-      'Clears sinus congestion',
-      'Improves mental clarity',
-      'Strengthens sensory organs',
-      'Benefits eyes and vision'
-    ],
-    contraindications: [
-      'Nasal bleeding',
-      'Recent head injury',
-      'Severe cold or flu',
-      'After heavy meals'
-    ],
-    category: 'shodhana'
-  },
-  {
-    id: '4',
-    name: 'Chyawanprash Treatment',
-    description: 'Administration of traditional herbal jam formula to boost immunity and vitality.',
-    duration: '3 months',
-    benefits: [
-      'Strengthens immune system',
-      'Improves digestion',
-      'Enhances energy levels',
-      'Anti-aging benefits'
-    ],
-    contraindications: [
-      'Diabetes (without supervision)',
-      'High blood sugar',
-      'Acute fever',
-      'Digestive disorders'
-    ],
-    category: 'rasayana'
-  },
-  {
-    id: '5',
-    name: 'Meditation and Pranayama',
-    description: 'Guided meditation and breathing exercises for mental well-being.',
-    duration: '60 mins',
-    benefits: [
-      'Reduces stress and anxiety',
-      'Improves concentration',
-      'Balances emotions',
-      'Enhances self-awareness'
-    ],
-    contraindications: [
-      'None',
-    ],
-    category: 'satvavajaya'
-  },
-];
+import { treatmentsAPI } from '../../services/api';
 
 export default function TreatmentsPage() {
+  const [treatments, setTreatments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredTreatments, setFilteredTreatments] = useState(mockTreatments);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+
+  useEffect(() => {
+    fetchTreatments();
+  }, [currentPage, searchTerm, categoryFilter]);
+
+  const fetchTreatments = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: 10,
+        search: searchTerm,
+        category: categoryFilter !== 'all' ? categoryFilter : undefined,
+      };
+      
+      const response = await treatmentsAPI.getTreatments(params);
+      const { treatments: treatmentData, pagination } = response.data;
+      
+      setTreatments(treatmentData);
+      setTotalPages(pagination.pages);
+    } catch (error) {
+      setError('Failed to load treatments');
+      console.error('Treatments error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleCategoryFilter = (category) => {
+    setCategoryFilter(category);
+    setCurrentPage(1);
+  };
+
+  const getCategoryColor = (category) => {
+    switch (category) {
+      case 'shamana':
+        return 'bg-green-100 text-green-800';
+      case 'shodhana':
+        return 'bg-purple-100 text-purple-800';
+      case 'rasayana':
+        return 'bg-blue-100 text-blue-800';
+      case 'satvavajaya':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   const columns = [
     {
-      title: 'Treatment Name',
-      key: 'name',
+      header: 'Treatment Name',
+      accessor: 'name',
       render: (treatment) => (
-        <div className="text-sm font-medium text-gray-900">{treatment.name}</div>
-      ),
-    },
-    {
-      title: 'Description',
-      key: 'description',
-      render: (treatment) => (
-        <div className="text-sm text-gray-500 max-w-xs truncate">{treatment.description}</div>
-      ),
-    },
-    {
-      title: 'Duration',
-      key: 'duration',
-      render: (treatment) => (
-        <span className="text-xs text-gray-700">{treatment.duration}</span>
-      ),
-    },
-    {
-      title: 'Category',
-      key: 'category',
-      render: (treatment) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 capitalize">
-          {treatment.category}
-        </span>
-      ),
-    },
-  ];
-
-  const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchTerm(value);
-    setFilteredTreatments(
-      mockTreatments.filter((treatment) =>
-        treatment.name.toLowerCase().includes(value.toLowerCase()) ||
-        treatment.description.toLowerCase().includes(value.toLowerCase())
-      )
-    );
-  };
-
-  return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Treatments"
-        description="View and manage available treatments."
-        actionLabel="Add Treatment"
-        actionIcon={PlusIcon}
-        onAction={() => {}}
-      />
-      <div className="flex items-center mb-4">
-        <div className="relative w-full max-w-xs">
-          <input
-            type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
-            placeholder="Search treatments..."
-            value={searchTerm}
-            onChange={handleSearch}
-          />
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+        <div>
+          <div className="font-medium text-gray-900">
+            {treatment.name}
+          </div>
+          <div className="text-sm text-gray-500 mt-1">
+            {treatment.duration?.session || treatment.duration} mins
           </div>
         </div>
+      )
+    },
+    {
+      header: 'Description',
+      accessor: 'description',
+      render: (treatment) => (
+        <div className="max-w-xs">
+          <p className="text-sm text-gray-900 line-clamp-2">
+            {treatment.description}
+          </p>
+        </div>
+      )
+    },
+    {
+      header: 'Category',
+      accessor: 'category',
+      render: (treatment) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full capitalize ${getCategoryColor(treatment.category)}`}>
+          {treatment.category}
+        </span>
+      )
+    },
+    {
+      header: 'Price',
+      accessor: 'pricing',
+      render: (treatment) => (
+        <div className="text-sm">
+          <div className="font-medium text-gray-900">
+            ₹{treatment.pricing?.perSession || 'N/A'}
+          </div>
+          <div className="text-gray-500">
+            per session
+          </div>
+        </div>
+      )
+    },
+    {
+      header: 'Benefits',
+      accessor: 'benefits',
+      render: (treatment) => (
+        <div className="max-w-xs">
+          <ul className="text-xs text-gray-600">
+            {treatment.benefits?.slice(0, 2).map((benefit, index) => (
+              <li key={index} className="mb-1">• {benefit}</li>
+            ))}
+            {treatment.benefits?.length > 2 && (
+              <li className="text-gray-400">+{treatment.benefits.length - 2} more</li>
+            )}
+          </ul>
+        </div>
+      )
+    }
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
       </div>
-      <Table columns={columns} data={filteredTreatments} />
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={fetchTreatments}
+            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Treatments"
+        description="Manage Ayurvedic treatments and therapies."
+      >
+        <button className="ml-3 inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+          <PlusIcon className="h-5 w-5 mr-2" />
+          Add Treatment
+        </button>
+      </PageHeader>
+
+      <div className="bg-white shadow-sm rounded-lg">
+        {/* Filters and Search */}
+        <div className="p-4 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="max-w-lg w-full lg:max-w-xs">
+              <label htmlFor="search" className="sr-only">
+                Search
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  name="search"
+                  id="search"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                  placeholder="Search treatments..."
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
+              </div>
+            </div>
+
+            {/* Category Filter */}
+            <select
+              value={categoryFilter}
+              onChange={(e) => handleCategoryFilter(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <option value="all">All Categories</option>
+              <option value="shamana">Shamana (Palliative)</option>
+              <option value="shodhana">Shodhana (Purificatory)</option>
+              <option value="rasayana">Rasayana (Rejuvenative)</option>
+              <option value="satvavajaya">Satvavajaya (Psychotherapy)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Table */}
+        <Table
+          data={treatments}
+          columns={columns}
+          keyField="_id"
+          emptyMessage="No treatments found"
+          pagination={{
+            currentPage,
+            totalPages,
+            onPageChange: setCurrentPage
+          }}
+        />
+      </div>
     </div>
   );
 }

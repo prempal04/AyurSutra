@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   MagnifyingGlassIcon,
   UserPlusIcon,
@@ -7,83 +7,46 @@ import {
 import { format } from 'date-fns';
 import PageHeader from '../Shared/PageHeader';
 import Table from '../Shared/Table';
-
-const mockPatients = [
-  {
-    id: '1',
-    name: 'Rahul Sharma',
-    email: 'rahul.sharma@example.com',
-    phone: '+91 98765 43210',
-    dateOfBirth: '1985-05-15',
-    gender: 'male',
-    address: 'Bangalore, Karnataka',
-    emergencyContact: '+91 98765 43211',
-    medicalHistory: ['Hypertension', 'Diabetes'],
-    prakriti: 'Vata-Pitta',
-    vikriti: 'Vata aggravation',
-    createdAt: '2025-01-15'
-  },
-  {
-    id: '2',
-    name: 'Priya Patel',
-    email: 'priya.patel@example.com',
-    phone: '+91 98765 43212',
-    dateOfBirth: '1990-08-23',
-    gender: 'female',
-    address: 'Mumbai, Maharashtra',
-    emergencyContact: '+91 98765 43213',
-    medicalHistory: ['Asthma'],
-    prakriti: 'Kapha-Pitta',
-    vikriti: 'Kapha accumulation',
-    createdAt: '2025-02-20'
-  },
-  {
-    id: '3',
-    name: 'Amit Kumar',
-    email: 'amit.kumar@example.com',
-    phone: '+91 98765 43214',
-    dateOfBirth: '1978-12-10',
-    gender: 'male',
-    address: 'Delhi, NCR',
-    emergencyContact: '+91 98765 43215',
-    medicalHistory: ['Joint pain', 'Insomnia'],
-    prakriti: 'Vata',
-    vikriti: 'Vata aggravation',
-    createdAt: '2025-03-05'
-  },
-  {
-    id: '4',
-    name: 'Meera Joshi',
-    email: 'meera.joshi@example.com',
-    phone: '+91 98765 43216',
-    dateOfBirth: '1982-03-28',
-    gender: 'female',
-    address: 'Pune, Maharashtra',
-    emergencyContact: '+91 98765 43217',
-    medicalHistory: ['Digestive issues'],
-    prakriti: 'Pitta',
-    vikriti: 'Pitta aggravation',
-    createdAt: '2025-03-15'
-  },
-  {
-    id: '5',
-    name: 'Suresh Reddy',
-    email: 'suresh.reddy@example.com',
-    phone: '+91 98765 43218',
-    dateOfBirth: '1995-07-12',
-    gender: 'male',
-    address: 'Hyderabad, Telangana',
-    emergencyContact: '+91 98765 43219',
-    medicalHistory: ['Skin conditions'],
-    prakriti: 'Pitta-Kapha',
-    vikriti: 'Pitta aggravation',
-    createdAt: '2025-03-18'
-  },
-];
+import { patientsAPI } from '../../services/api';
 
 export default function PatientsPage() {
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredPatients, setFilteredPatients] = useState(mockPatients);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    fetchPatients();
+  }, [currentPage, searchTerm]);
+
+  const fetchPatients = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: 10,
+        search: searchTerm,
+      };
+      
+      const response = await patientsAPI.getPatients(params);
+      const { patients: patientData, pagination } = response.data;
+      
+      setPatients(patientData);
+      setTotalPages(pagination.pages);
+    } catch (error) {
+      setError('Failed to load patients');
+      console.error('Patients error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
 
   const columns = [
     {
@@ -94,13 +57,16 @@ export default function PatientsPage() {
           <div className="flex-shrink-0 h-10 w-10">
             <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
               <span className="text-emerald-600 font-medium text-sm">
-                {patient.name.split(' ').map(n => n[0]).join('')}
+                {patient.user?.firstName?.charAt(0)}{patient.user?.lastName?.charAt(0)}
               </span>
             </div>
           </div>
           <div className="ml-4">
-            <div className="text-sm font-medium text-gray-900">{patient.name}</div>
-            <div className="text-sm text-gray-500">{patient.email}</div>
+            <div className="text-sm font-medium text-gray-900">
+              {patient.user?.fullName || `${patient.user?.firstName} ${patient.user?.lastName}`}
+            </div>
+            <div className="text-sm text-gray-500">{patient.user?.email}</div>
+            <div className="text-xs text-gray-400">ID: {patient.patientId}</div>
           </div>
         </div>
       )
@@ -110,64 +76,93 @@ export default function PatientsPage() {
       key: 'phone',
       render: (patient) => (
         <div>
-          <div className="text-sm text-gray-900">{patient.phone}</div>
-          <div className="text-sm text-gray-500">{patient.address}</div>
+          <div className="text-sm text-gray-900">{patient.user?.phone}</div>
+          <div className="text-sm text-gray-500">
+            {patient.address?.city}, {patient.address?.state}
+          </div>
         </div>
       )
     },
     {
-      title: 'Age / Gender',
-      key: 'dateOfBirth',
-      render: (patient) => {
-        const age = new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear();
-        return (
-          <div>
-            <div className="text-sm text-gray-900">{age} years</div>
-            <div className="text-sm text-gray-500 capitalize">{patient.gender}</div>
-          </div>
-        );
-      }
-    },
-    {
-      title: 'Prakriti/Vikriti',
-      key: 'prakriti',
+      title: 'Demographics',
+      key: 'demographics',
       render: (patient) => (
         <div>
-          <div className="text-sm text-gray-900">{patient.prakriti}</div>
-          <div className="text-sm text-gray-500">{patient.vikriti}</div>
+          <div className="text-sm text-gray-900">
+            {patient.gender} • Age {patient.age}
+          </div>
+          <div className="text-sm text-gray-500">{patient.bloodGroup}</div>
         </div>
       )
     },
     {
-      title: 'Last Visit',
-      key: 'createdAt',
+      title: 'Ayurvedic Profile',
+      key: 'dosha',
       render: (patient) => (
-        <div className="text-sm text-gray-900">
-          {format(new Date(patient.createdAt), 'MMM dd, yyyy')}
+        <div>
+          <div className="text-sm text-gray-900">
+            Prakriti: {patient.prakriti?.dominantDosha}
+          </div>
+          <div className="text-sm text-gray-500">
+            {patient.vikriti?.imbalance && `Current: ${patient.vikriti.imbalance}`}
+          </div>
         </div>
       )
     },
     {
-      title: '',
-      key: 'actions',
-      render: () => (
-        <button className="text-emerald-600 hover:text-emerald-900">
-          <ChevronDownIcon className="h-5 w-5" />
-        </button>
+      title: 'Medical History',
+      key: 'history',
+      render: (patient) => (
+        <div>
+          {patient.medicalHistory?.length > 0 ? (
+            <div className="text-sm text-gray-900">
+              {patient.medicalHistory.slice(0, 2).map(h => h.condition).join(', ')}
+              {patient.medicalHistory.length > 2 && '...'}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500">No history</div>
+          )}
+        </div>
       )
     },
+    {
+      title: 'Status',
+      key: 'status',
+      render: (patient) => (
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+          patient.isActive
+            ? 'bg-green-100 text-green-800'
+            : 'bg-red-100 text-red-800'
+        }`}>
+          {patient.isActive ? 'Active' : 'Inactive'}
+        </span>
+      )
+    }
   ];
 
-  const handleSearch = (event) => {
-    const term = event.target.value.toLowerCase();
-    setSearchTerm(term);
-    const filtered = mockPatients.filter(patient => 
-      patient.name.toLowerCase().includes(term) ||
-      patient.email.toLowerCase().includes(term) ||
-      patient.phone.includes(term)
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-500"></div>
+      </div>
     );
-    setFilteredPatients(filtered);
-  };
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-red-600">{error}</p>
+          <button 
+            onClick={fetchPatients}
+            className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -180,6 +175,7 @@ export default function PatientsPage() {
           Add Patient
         </button>
       </PageHeader>
+      
       <div className="bg-white shadow-sm rounded-lg">
         {/* Search Bar */}
         <div className="p-4 border-b border-gray-200">
@@ -203,13 +199,39 @@ export default function PatientsPage() {
             </div>
           </div>
         </div>
+
         {/* Table */}
         <Table
-          data={filteredPatients}
+          data={patients}
           columns={columns}
           keyField="id"
           emptyMessage="No patients found"
         />
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-4 py-3 flex items-center justify-between border-t border-gray-200">
+            <div className="flex-1 flex justify-between">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-700">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

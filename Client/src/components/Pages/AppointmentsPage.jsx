@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CalendarDaysIcon,
   ClockIcon,
@@ -8,80 +8,66 @@ import {
 import { format } from 'date-fns';
 import PageHeader from '../Shared/PageHeader';
 import Table from '../Shared/Table';
-
-const mockAppointments = [
-  {
-    id: '1',
-    patientId: 'p1',
-    doctorId: 'd1',
-    treatmentId: 't1',
-    date: '2025-09-20',
-    time: '10:00',
-    status: 'scheduled',
-    notes: 'Regular checkup',
-  },
-  {
-    id: '2',
-    patientId: 'p2',
-    doctorId: 'd1',
-    treatmentId: 't2',
-    date: '2025-09-20',
-    time: '11:30',
-    status: 'in-progress',
-    notes: 'Follow-up session',
-  },
-  {
-    id: '3',
-    patientId: 'p3',
-    doctorId: 'd1',
-    treatmentId: 't3',
-    date: '2025-09-20',
-    time: '14:00',
-    status: 'scheduled',
-    notes: 'Initial consultation',
-  },
-  {
-    id: '4',
-    patientId: 'p4',
-    doctorId: 'd1',
-    treatmentId: 't4',
-    date: '2025-09-20',
-    time: '15:30',
-    status: 'completed',
-    notes: 'Treatment session',
-    followUp: '2025-09-27',
-  },
-  {
-    id: '5',
-    patientId: 'p5',
-    doctorId: 'd1',
-    treatmentId: 't5',
-    date: '2025-09-20',
-    time: '16:00',
-    status: 'scheduled',
-    notes: 'Panchakarma session',
-  },
-];
-
-const mockPatientNames = {
-  p1: 'Rahul Sharma',
-  p2: 'Priya Patel',
-  p3: 'Anita Desai',
-  p4: 'Vikram Singh',
-  p5: 'Meera Joshi',
-};
-
-const mockTreatments = {
-  t1: 'Abhyanga + Shirodhara',
-  t2: 'Nasyam',
-  t3: 'Initial Consultation',
-  t4: 'Panchakarma Therapy',
-  t5: 'Basti Treatment',
-};
+import { appointmentsAPI } from '../../services/api';
 
 export default function AppointmentsPage() {
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredAppointments, setFilteredAppointments] = useState(mockAppointments);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [currentPage, searchTerm, statusFilter]);
+
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const params = {
+        page: currentPage,
+        limit: 10,
+        search: searchTerm,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+      };
+      
+      console.log('AppointmentsPage: Fetching appointments with params:', params);
+      
+      const response = await appointmentsAPI.getAppointments(params);
+      console.log('AppointmentsPage: API response:', response);
+      
+      if (response && response.data) {
+        const { appointments: appointmentData, pagination } = response.data;
+        console.log('AppointmentsPage: Received appointments:', appointmentData);
+        console.log('AppointmentsPage: Pagination:', pagination);
+        
+        setAppointments(appointmentData || []);
+        setTotalPages(pagination?.pages || 1);
+      } else {
+        console.error('AppointmentsPage: Invalid response structure:', response);
+        setError('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('AppointmentsPage: Error fetching appointments:', error);
+      setError('Failed to load appointments: ' + (error.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -100,90 +86,154 @@ export default function AppointmentsPage() {
 
   const columns = [
     {
-      title: 'Time',
-      key: 'time',
-      render: (appointment) => (
-        <div className="flex items-center">
-          <ClockIcon className="h-5 w-5 text-gray-400 mr-2" />
+      header: 'Date & Time',
+      accessor: 'appointmentDate',
+      render: (appointment) => {
+        try {
+          const appointmentDate = new Date(appointment.appointmentDate);
+          return (
+            <div>
+              <div className="font-medium">
+                {format(appointmentDate, 'MMM dd, yyyy')}
+              </div>
+              <div className="text-sm text-gray-500">
+                {appointment.timeSlot?.start || 'TBD'} - {appointment.timeSlot?.end || 'TBD'}
+              </div>
+            </div>
+          );
+        } catch (error) {
+          console.error('Date formatting error:', error);
+          return (
+            <div>
+              <div className="font-medium">Invalid Date</div>
+              <div className="text-sm text-gray-500">
+                {appointment.timeSlot?.start || 'TBD'} - {appointment.timeSlot?.end || 'TBD'}
+              </div>
+            </div>
+          );
+        }
+      }
+    },
+    {
+      header: 'Patient',
+      accessor: 'patient',
+      render: (appointment) => {
+        const patient = appointment.patient;
+        if (!patient) {
+          return (
+            <div>
+              <div className="font-medium text-gray-400">No patient assigned</div>
+              <div className="text-sm text-gray-500">-</div>
+            </div>
+          );
+        }
+        
+        const patientName = patient.user?.fullName || 
+                           `${patient.user?.firstName || ''} ${patient.user?.lastName || ''}`.trim() ||
+                           'Unknown Patient';
+        const patientPhone = patient.user?.phone || 'No phone';
+        
+        return (
           <div>
-            <div className="text-sm font-medium text-gray-900">
-              {format(new Date(`${appointment.date}T${appointment.time}`), 'h:mm a')}
-            </div>
-            <div className="text-sm text-gray-500">
-              {format(new Date(appointment.date), 'MMM dd, yyyy')}
-            </div>
+            <div className="font-medium">{patientName}</div>
+            <div className="text-sm text-gray-500">{patientPhone}</div>
           </div>
-        </div>
-      ),
+        );
+      }
     },
     {
-      title: 'Patient',
-      key: 'patientId',
-      render: (appointment) => (
-        <div className="flex items-center">
-          <div className="flex-shrink-0 h-8 w-8">
-            <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center">
-              <span className="text-emerald-600 font-medium text-sm">
-                {mockPatientNames[appointment.patientId]?.charAt(0)}
-              </span>
+      header: 'Doctor',
+      accessor: 'doctor',
+      render: (appointment) => {
+        const doctor = appointment.doctor;
+        if (!doctor) {
+          return (
+            <div>
+              <div className="font-medium text-gray-400">No doctor assigned</div>
+              <div className="text-sm text-gray-500">-</div>
             </div>
+          );
+        }
+        
+        const doctorName = doctor.fullName || 
+                          `${doctor.firstName || ''} ${doctor.lastName || ''}`.trim() ||
+                          'Unknown Doctor';
+        
+        return (
+          <div>
+            <div className="font-medium">{doctorName}</div>
+            <div className="text-sm text-gray-500">{doctor.email || 'No email'}</div>
           </div>
-          <div className="ml-3">
-            <div className="text-sm font-medium text-gray-900">
-              {mockPatientNames[appointment.patientId]}
-            </div>
-          </div>
-        </div>
-      ),
+        );
+      }
     },
     {
-      title: 'Treatment',
-      key: 'treatmentId',
-      render: (appointment) => (
-        <div className="text-sm text-gray-900">
-          {mockTreatments[appointment.treatmentId]}
-        </div>
-      ),
+      header: 'Treatment',
+      accessor: 'treatment',
+      render: (appointment) => {
+        const treatment = appointment.treatment;
+        if (!treatment) {
+          return (
+            <div>
+              <div className="font-medium text-gray-400">No treatment assigned</div>
+              <div className="text-sm text-gray-500">-</div>
+            </div>
+          );
+        }
+        
+        const duration = treatment.duration?.session || appointment.duration || 'TBD';
+        
+        return (
+          <div>
+            <div className="font-medium">{treatment.name}</div>
+            <div className="text-sm text-gray-500">{duration} mins</div>
+          </div>
+        );
+      }
     },
     {
-      title: 'Status',
-      key: 'status',
+      header: 'Status',
+      accessor: 'status',
       render: (appointment) => (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${getStatusColor(appointment.status)}`}>
-          {appointment.status}
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(appointment.status)}`}>
+          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
         </span>
-      ),
+      )
     },
     {
-      title: 'Notes',
-      key: 'notes',
+      header: 'Notes',
+      accessor: 'notes',
       render: (appointment) => (
-        <div>
-          <div className="text-sm text-gray-900">{appointment.notes}</div>
-          {appointment.followUp && (
-            <div className="text-sm text-gray-500">
-              Follow-up: {format(new Date(appointment.followUp), 'MMM dd, yyyy')}
-            </div>
-          )}
+        <div className="max-w-xs truncate">
+          {appointment.notes || 'No notes'}
         </div>
-      ),
-    },
+      )
+    }
   ];
 
-  const handleSearch = (event) => {
-    const term = event.target.value.toLowerCase();
-    setSearchTerm(term);
-    const filtered = mockAppointments.filter(appointment => {
-      const patientName = mockPatientNames[appointment.patientId].toLowerCase();
-      const treatment = mockTreatments[appointment.treatmentId].toLowerCase();
-      return (
-        patientName.includes(term) ||
-        treatment.includes(term) ||
-        appointment.status.includes(term)
-      );
-    });
-    setFilteredAppointments(filtered);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={fetchAppointments}
+            className="mt-2 px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -196,6 +246,7 @@ export default function AppointmentsPage() {
           New Appointment
         </button>
       </PageHeader>
+
       <div className="bg-white shadow-sm rounded-lg">
         {/* Filters and Search */}
         <div className="p-4 border-b border-gray-200 sm:flex sm:items-center sm:justify-between">
@@ -219,18 +270,38 @@ export default function AppointmentsPage() {
                 />
               </div>
             </div>
+
+            {/* Status Filter */}
+            <select
+              value={statusFilter}
+              onChange={(e) => handleStatusFilter(e.target.value)}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+            >
+              <option value="all">All Status</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
           </div>
+
           <div className="mt-4 sm:mt-0 flex items-center space-x-2">
             <CalendarDaysIcon className="h-5 w-5 text-gray-400" />
             <span className="text-sm text-gray-600">Today, Sep 18, 2025</span>
           </div>
         </div>
+
         {/* Table */}
         <Table
-          data={filteredAppointments}
+          data={appointments}
           columns={columns}
-          keyField="id"
+          keyField="_id"
           emptyMessage="No appointments found"
+          pagination={{
+            currentPage,
+            totalPages,
+            onPageChange: setCurrentPage
+          }}
         />
       </div>
     </div>

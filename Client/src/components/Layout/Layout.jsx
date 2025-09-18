@@ -2,11 +2,15 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
+import { useAuth } from '../../contexts/AuthContext';
 
-export default function Layout({ userRole, children }) {
+export default function Layout({ children }) {
+  const { user } = useAuth();
+  const userRole = user?.role || 'patient';
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header userRole={userRole} />
+      <Header />
       <div className="flex">
         <Sidebar userRole={userRole} />
         <main className="flex-1 md:pl-64">
