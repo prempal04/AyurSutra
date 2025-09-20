@@ -13,6 +13,7 @@ import ReportsPage from './components/Pages/ReportsPage';
 import SettingsPage from './components/Pages/SettingsPage';
 import HealthRecordsPage from './components/Pages/HealthRecordsPage';
 import BookAppointmentPage from './components/Pages/BookAppointmentPage';
+import LandingPage from './pages/LandingPage';
 
 function LoginPage() {
   const [role, setRole] = useState('admin');
@@ -38,8 +39,9 @@ function AppRoutes() {
   if (!isAuthenticated) {
     return (
       <Routes>
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
@@ -48,9 +50,8 @@ function AppRoutes() {
 
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      
       <Route path="/*" element={
         <ProtectedRoute>
           <Layout>
